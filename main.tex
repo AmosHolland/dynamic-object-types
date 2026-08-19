@@ -1,0 +1,89 @@
+\documentclass{acmart}
+\usepackage{mathtools}
+\usepackage{mathpartir}
+
+\usepackage{macros}
+
+\begin{document}
+
+\[
+  e_1, e_2 \Coloneq \num{n} \mid \true \mid \false \mid \dots \mid x
+  \mid e.attr \mid e_1[e_2] \mid e_1(\vv{e_2}) \mid
+  \listExp{e_1, \dots, e_n} \mid \dictExp{e_1: e_1', \dots, e_n:e_n' } \mid
+  \newExp
+\]
+
+\[
+  s \Coloneq x = e \mid x.attr = e \mid x[e_1] = e_2 \mid \vv{s} \mid
+  \ifStmt{e}{s_1}{s_2} \mid \returnStmt e \mid \funStmt{f}{\vv{x}}{s}
+\]
+
+\[
+  A, B \Coloneq \intty \mid \boolty \mid \objty{i} \mid \listty \mid
+  \dictty \mid \anyty \mid \vv{A} \to B
+\]
+
+\begin{mathpar}
+  \infer[Var]{ }{\Theta; \Gamma, x:A \types x:A} \and
+
+  \infer[Num]{ }{\Theta; \Gamma \types \num{n}:\intty} \and
+
+  \dots \and
+
+  \infer[Dict]
+  {(\forall i \in [1,n])\,\Theta; \Gamma \types e_i: \anyty \\  \Theta; \Gamma \types e_i':Any }
+  {\Theta; \Gamma \types \dictExp{e_1: e_1', \dots, e_n:e_n' }:\dictty } \and
+
+  \infer[List]
+  {(\forall i \in [1,n])\,\Theta; \Gamma \types e_i: \anyty}
+  {\Theta; \Gamma \types \listExp{e_1, \dots, e_n}:\listty } \and
+
+  \infer[New]
+  { }
+  {\Theta; \Gamma \types \newExp : \objty{i} } \,\,
+  \objty{i} \, \text{is fresh} \and
+
+  \infer[Ind-1]
+  {\Theta; \Gamma \types e_1: \dictty}
+  {\Theta; \Gamma \types e_1[e_2]: \anyty} \and
+
+  \infer[Ind-2]
+  {\Theta; \Gamma \types e_1: \listty \\ \Theta; \Gamma \types e_2:\intty}
+  {\Theta; \Gamma \types e_1[e_2]: \anyty} \and
+
+  \infer[Attr]
+  {\Theta, \objty{i}.attr : A; \Gamma \types e: \objty{i} }
+  {\Theta, \objty{i}.attr : A; \Gamma \types e.attr : A}
+\end{mathpar}
+\\\\
+\begin{mathpar}
+  \infer[Assign-Var]
+  {\Theta; \Gamma \types e:A}
+  {\Theta; \Gamma \Vdash x = e: empty \with x \mapsto A }
+
+  \infer[Assign-Attr]
+  {\Theta; \Gamma \types e:A}
+  {\Theta; \Gamma, x:\objty{i} \Vdash x.attr = e: empty
+  \with \objty{i}.attr \mapsto A}
+
+  \infer[Return]
+  {\Theta; \Gamma \types e:A}
+  {\Theta; \Gamma \Vdash \returnStmt e : A \with \varepsilon}
+
+  \infer[If]
+  { \Theta;\Gamma \types e: \boolty \\
+    \Theta; \Gamma \Vdash s_1: A \with \psi_1 \\
+  \Theta; \Gamma \Vdash s_2 : A \with \psi_2}
+  {\Theta; \Gamma \Vdash \ifStmt{e}{s_1}{s_2}:A \with \psi_1 \vee \psi_2}
+
+  \infer[Seq]
+  {\dots}
+  {\dots}
+
+  \infer[Fun]
+  {\dots}
+  {\dots}
+
+\end{mathpar}
+
+\end{document}
