@@ -1,8 +1,0 @@
-\begin{thebibliography}{1}
-
-\bibitem{rak-amnouykit_python_2020}
-Ingkarat Rak-amnouykit, Daniel McCrevan, Ana Milanova, Martin Hirzel, and Julian Dolby.
-\newblock Python 3 types in the wild: a tale of two type systems.
-\newblock In {\em Proceedings of the 16th {ACM} {SIGPLAN} {International} {Symposium} on {Dynamic} {Languages}}, {DLS} 2020, pages 57--70, New York, NY, USA, November 2020. Association for Computing Machinery.
-
-\end{thebibliography}
