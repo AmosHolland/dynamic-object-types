@@ -6,84 +6,131 @@
 
 \begin{document}
 
+\section{Language}
+
+We work with a Python-like Language (adapted from
+\cite{rak-amnouykit_python_2020}). A program is made up of declarations,
+statements, and expressions.\\
+\[
+  d_1, d_2 \Coloneq \funDecl{f}{\vv{x}}{d_1}{d_2} \mid \varDecl{x}{e}{d_1} \mid
+  s
+\]
+
+\[
+  s \Coloneq x = e \mid x.attr = e \mid \ifStmt{e}{s_1}{s_2} \mid \returnStmt e
+  \mid \vv{s}
+\]
+
 \[
   e_1, e_2 \Coloneq \num{n} \mid \true \mid \false \mid \dots \mid x
   \mid e.attr \mid e_1[e_2] \mid e_1(\vv{e_2}) \mid
   \listExp{e_1, \dots, e_n} \mid \dictExp{e_1: e_1', \dots, e_n:e_n' } \mid
   \newExp
 \]
+\\
+Python's syntax does not distinguish between variable declaration, and variable
+assignment, but we choose to here for simplicity. For similar reasons, we also
+enforce that declarations all occur before the main body of a function or
+program. Although this is not enforced by the grammar, we will assume that the
+body of a function contains at most one return statement and that this will be
+the last statement in the body. Any hypothetical program not following
+these conventions / restrictions could be converted into a program that fits
+into our grammar by a simple code transformation.
 
-\[
-  s \Coloneq x = e \mid x.attr = e \mid x[e_1] = e_2 \mid \vv{s} \mid
-  \ifStmt{e}{s_1}{s_2} \mid \returnStmt e \mid \funStmt{f}{\vv{x}}{s}
-\]
+The \(\dots\) in the grammar for expressions serves as a placeholder for
+a range of simple constants that are present in the language.
 
+\section{Types}
+
+We work with a fairly standard set of types for Python, defined by the following
+grammar.
+\\
 \[
-  A, B \Coloneq \intty \mid \boolty \mid \objty{i} \mid \listty \mid
-  \dictty \mid \anyty \mid \vv{A} \to B
+  A, B \Coloneq \intty \mid \boolty \mid \listty \mid
+  \dictty \mid \anyty \mid \vv{A} \to B \mid [\vv{x:A}] \mid \nonety
 \]
+\\
+The type \(\nonety\) might be expected to be related to the Python keyword of
+the same name, but for our purposes it is just used as the return type for
+functions that do not return a value. Our row types \([\vv{x:A}]\) are
+non-standard, as they represent an upper bound on the attributes available
+for an object, rather than the usual lower bound interpretation.
 
 \begin{mathpar}
-  \infer[Var]{ }{\Theta; \Gamma, x:A \types x:A} \and
+  \infer[Var]{ }{\Gamma, x:A \types x:A} \and
 
-  \infer[Num]{ }{\Theta; \Gamma \types \num{n}:\intty} \and
+  \infer[Num]{ }{\Gamma \types \num{n}:\intty} \and
 
   \dots \and
 
   \infer[Dict]
-  {(\forall i \in [1,n])\,\Theta; \Gamma \types e_i: \anyty \\  \Theta; \Gamma \types e_i':Any }
-  {\Theta; \Gamma \types \dictExp{e_1: e_1', \dots, e_n:e_n' }:\dictty } \and
+  {(\forall i \in [1,n])\,\Gamma \types e_i: \anyty \\
+  \Gamma \types e_i':\anyty}
+  {\Gamma \types \dictExp{e_1: e_1', \dots, e_n:e_n' }:\dictty } \and
 
   \infer[List]
-  {(\forall i \in [1,n])\,\Theta; \Gamma \types e_i: \anyty}
-  {\Theta; \Gamma \types \listExp{e_1, \dots, e_n}:\listty } \and
+  {(\forall i \in [1,n])\,\Gamma \types e_i: \anyty}
+  {\Gamma \types \listExp{e_1, \dots, e_n}:\listty } \and
 
   \infer[New]
   { }
-  {\Theta; \Gamma \types \newExp : \objty{i} } \,\,
-  \objty{i} \, \text{is fresh} \and
+  {\Gamma \types \newExp : [\vv{x:A}] } \and
 
   \infer[Ind-1]
-  {\Theta; \Gamma \types e_1: \dictty}
-  {\Theta; \Gamma \types e_1[e_2]: \anyty} \and
+  {\Gamma \types e_1: \dictty}
+  {\Gamma \types e_1[e_2]: \anyty} \and
 
   \infer[Ind-2]
-  {\Theta; \Gamma \types e_1: \listty \\ \Theta; \Gamma \types e_2:\intty}
-  {\Theta; \Gamma \types e_1[e_2]: \anyty} \and
+  {\Gamma \types e_1: \listty \\ \Gamma \types e_2:\intty}
+  {\Gamma \types e_1[e_2]: \anyty} \and
 
   \infer[Attr]
-  {\Theta, \objty{i}.attr : A; \Gamma \types e: \objty{i} }
-  {\Theta, \objty{i}.attr : A; \Gamma \types e.attr : A}
-\end{mathpar}
-\\\\
-\begin{mathpar}
+  {\Gamma \types e: [attr:A, \vv{x:A}] }
+  {\Gamma \types e.attr : A}
+
+  \infer[Call]
+  {\Gamma \types e: \vv{B_1, \dots B_n} \to A \\
+  (\forall i \in [1,n]) \,\, \Gamma \types e_i : B_i}
+  {\Gamma \types e(\vv{e_1, \dots e_n}):A}
+
+  \\\\\\\\
   \infer[Assign-Var]
-  {\Theta; \Gamma \types e:A}
-  {\Theta; \Gamma \Vdash x = e: empty \with x \mapsto A }
+  {\Gamma, x:A \types e:A}
+  {\Gamma, x:A \types x = e \rhd \nonety}
 
   \infer[Assign-Attr]
-  {\Theta; \Gamma \types e:A}
-  {\Theta; \Gamma, x:\objty{i} \Vdash x.attr = e: empty
-  \with \objty{i}.attr \mapsto A}
+  {\Gamma, x:[\vv{y:B}, attr:A] \types e:A}
+  {\Gamma, x:[\vv{y:B}, attr:A] \types x.attr = e \rhd \nonety}
 
-  \infer[Return]
-  {\Theta; \Gamma \types e:A}
-  {\Theta; \Gamma \Vdash \returnStmt e : A \with \varepsilon}
+  \dots
 
   \infer[If]
-  { \Theta;\Gamma \types e: \boolty \\
-    \Theta; \Gamma \Vdash s_1: A \with \psi_1 \\
-  \Theta; \Gamma \Vdash s_2 : A \with \psi_2}
-  {\Theta; \Gamma \Vdash \ifStmt{e}{s_1}{s_2}:A \with \psi_1 \vee \psi_2}
+  {\Gamma \types e: \boolty \\ \Gamma \types s_1 \rhd A \\
+  \Gamma \types s_2 \rhd B}
+  {\Gamma \types \ifStmt{e}{s_1}{s_2} \rhd \nonety} \and
+
+  \infer[Return]
+  {\Gamma \types e:A}
+  {\Gamma \types \returnStmt e \rhd A} \and
 
   \infer[Seq]
-  {\dots}
-  {\dots}
+  {\Gamma \types s:B \\ \Gamma \types \vv{s}:A}
+  {\Gamma \types s \, \vv{s} \,\rhd \,A}
+  \\\\\\\\
 
+  \infer[Decl]
+  {\Gamma \types e:B  \\ \Gamma, x:B \types d_1 \rhd A}
+  {\Gamma \types \varDecl{x}{e}{d_1} \rhd A} \and
   \infer[Fun]
-  {\dots}
-  {\dots}
-
+  {
+    \Gamma, x_1:A_i, \dots, x_n:A_n, f: \vv{A_1 \dots A_n} \to B  \types
+    d_1 \rhd B \\
+    \Gamma, f:\vv{A_1 \dots A_n} \to B \types d_2 \rhd A
+  }
+  {\Gamma \types \funDecl{f}{\vv{x_1, \dots, x_n}}{d_1}{d_2} \rhd A}
 \end{mathpar}
+\\\\
 
+\bibliography{refs}{}
+\bibliographystyle{plain}
 \end{document}
