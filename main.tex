@@ -1,4 +1,5 @@
 \documentclass{acmart}
+\title{Python Types}
 \usepackage{mathtools}
 \usepackage{mathpartir}
 
@@ -17,8 +18,8 @@ statements, and expressions.\\
 \]
 
 \[
-  s \Coloneq x = e \mid x.attr = e \mid \ifStmt{e}{s_1}{s_2} \mid \returnStmt e
-  \mid \vv{s}
+  s \Coloneq x = e \mid x.attr = e \mid \ifStmt{e}{s_1}{s_2} \mid
+  \returnStmt e  \mid e \mid \vv{s}
 \]
 
 \[
@@ -113,6 +114,10 @@ for an object, rather than the usual lower bound interpretation.
   {\Gamma \types e:A}
   {\Gamma \types \returnStmt e \rhd A} \and
 
+  \infer[ExprStmt]
+  {\Gamma \types e:A}
+  {\Gamma \types e \rhd \nonety} \and
+
   \infer[Seq]
   {\Gamma \types s:B \\ \Gamma \types \vv{s}:A}
   {\Gamma \types s \, \vv{s} \,\rhd \,A}
@@ -128,9 +133,167 @@ for an object, rather than the usual lower bound interpretation.
     \Gamma, f:\vv{A_1 \dots A_n} \to B \types d_2 \rhd A
   }
   {\Gamma \types \funDecl{f}{\vv{x_1, \dots, x_n}}{d_1}{d_2} \rhd A}
+
+\end{mathpar}
+
+\section{Examples}
+\[
+  \begin{array}{l}
+    d_0=\\
+    \quad\mathsf{def} f(o,l):\\
+    \quad\quad\quad o.length = l\\
+    \quad\quad\quad \mathsf{if} \,\, l > \num{5} :\\
+    \quad\quad\quad\quad\quad o.long = \true \\
+    \quad\quad\quad \mathsf{else}:\\
+    \quad\quad\quad\quad\quad \num{0}\\
+    \quad\mathsf{in} \\
+    \quad obj := \newExp \,\,\mathsf{in}\\
+    \quad f(obj, \num{4}) \\
+    \quad obj
+  \end{array}
+\]
+
+\begin{mathpar}
+  \Gamma_f = o:[length: \intty, long:\boolty], l:\intty
+  \\\\
+  \infer
+  {
+    \infer
+    {\Gamma_f \types l: \intty}
+    {\Gamma_f \types o.length = l}
+    \\
+    \infer
+    {
+      \infer
+      {
+        \infer
+        { }
+        {\Gamma_f \types l : \intty}
+        \\
+        \infer
+        { }
+        {\Gamma_f \types \num{5}:\intty}
+      }
+      {\Gamma_f \types l > \num{5}:\boolty}
+      \\
+      \infer
+      {
+        \infer
+        { }
+        {\Gamma_f \types \true : \boolty}
+      }
+      {\Gamma_f \types o.long = \true \rhd \nonety}
+      \\
+      \infer
+      {
+        \infer
+        { }
+        {\Gamma_f \types \num{0}:\intty }
+      }
+      {\Gamma_f \types \num{0} \rhd \nonety}
+    }
+    {\Gamma_f \types \ifStmt{l > \num{5}}{o.long=\true}{\num{0}} \rhd \nonety}
+  }
+  {\Gamma_f \types o.length = l;\, \ifStmt{l > \num{5}}{o.long=\true}{\num{0}}
+  \rhd \nonety}
+\end{mathpar}
+
+\begin{mathpar}
+  d_b = o.length = l;\, \ifStmt{l > \num{5}}{o.long=\true}{\num{0}}
+  \\
+  d_1 = \varDecl{obj}{\newExp}{f(obj, \num{4}); obj}
+
+  \infer
+  {
+    \infer
+    {
+      \vdots
+    }
+    {o:[length:\intty, long:\boolty], l:\intty \types d_b \rhd \nonety}
+    \\
+    \infer
+    { \vdots}
+    {f : ([length:\intty, long:\boolty], \intty) \to \nonety
+    \types : d_1 \rhd \nonety }
+  }
+  {\types d_0 \rhd \nonety}
+\end{mathpar}
+\\
+\begin{mathpar}
+  A_f =  ([length:\intty, long:\boolty], \intty) \to \nonety
+  \\
+  A_{obj} = [length:\intty, long:\boolty]
+  \\
+  \infer
+  {
+    \infer
+    { }
+    {f:A_f \types \newExp : A_{obj}}
+    \\
+    \infer
+    {
+      \infer
+      {
+        \vdots
+      }
+      {f:A_f, obj:A_{obj} \types f(obj, \num{4}) \rhd \nonety}
+      \\
+      \infer
+      {
+        \infer
+        { }
+        {f:A_f, obj:A_{obj} \types obj:A_{obj} }
+      }
+      {f:A_f, obj:A_{obj} \types obj \rhd \nonety}
+    }
+    {f:A_f, obj:A_{obj} \types f(obj, \num{4}); obj}
+  }
+  {f:A_f \types \varDecl{obj}{\newExp}{f(obj, \num{4}); obj}}
 \end{mathpar}
 \\\\
-
+\[\infer
+  {
+    \infer
+    {
+      \infer
+      { }
+      {f:A_f, obj:A_{obj} \types f:A_f}
+      \\
+      \infer
+      { }
+      {f:A_f, obj:A_{obj} \types obj:A_{obj}}
+      \\
+      \infer
+      { }
+    {f:A_f, obj:A_{obj} \types \num{4}:\intty}}
+    {f:A_f, obj:A_{obj} \types f(obj, \num{4}):\nonety}
+  }
+{f:A_f, obj:A_{obj} \types f(obj, \num{4}) \rhd \nonety}\]
 \bibliography{refs}{}
 \bibliographystyle{plain}
+
+Consider the following program:
+\begin{mathpar}
+  \begin{array}{l}
+    \mathsf{def}\, f(x):\\
+    \quad\quad x.foo = \num{0}\\
+    \mathsf{in}\\
+    o_1 := \newExp \,\, \mathsf{in} \\
+    o_2 := \newExp \,\, \mathsf{in} \\
+    o_1.bar = \true \\
+    f(o_1) \\
+    f(o_2) \\
+  \end{array}
+  \\
+\end{mathpar}
+
+The function \(f\) needs to have a type like \([foo:\intty] \to \nonety\)
+based on its definition. In order for the call \(f(o_1)\) to be typable, we
+end up needing the type \([foo:\intty, bar:\boolty] \to \nonety\) for \(f\),
+and, because we later make the call \(f(o_2)\), this ends up forcing us to
+give \(o_2\) the type \([foo:\intty, bar:\boolty]\). This isn't ideal, so it
+seems like we want some sort of row polymorphism in our function types, maybe
+we can give \(f\), a type like \(\forall r.[foo:\intty, r] \to \nonety\).
+\\\\
+
 \end{document}
