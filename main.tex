@@ -137,6 +137,10 @@ for an object, rather than the usual lower bound interpretation.
 \end{mathpar}
 
 \section{Examples}
+
+To show how types (specifically the row types) flow around in the system,
+consider the following program which we will call \(d_0\).
+
 \[
   \begin{array}{l}
     d_0=\\
@@ -152,6 +156,11 @@ for an object, rather than the usual lower bound interpretation.
     \quad obj
   \end{array}
 \]
+
+We define a function f, which adds some attributes to the object that is passed
+to it, and then call this on a fresh object. We are particularly interested
+in what type(s) we can conclude for the object stored in (\(obj\)). First, we
+will look at typing the body of \(f\).
 
 \begin{mathpar}
   \Gamma_f = o:[length: \intty, long:\boolty], l:\intty
@@ -198,6 +207,14 @@ for an object, rather than the usual lower bound interpretation.
   \rhd \nonety}
 \end{mathpar}
 
+Note that the assignments present in the body of the function force us to have
+at least \(o:[length:\intty, long:\boolty]\) in the environment. The type
+\(\intty\) for \(l\) isn't really necessary , and may not be retrieved by
+inference, but for simplicity we have made this assumption here.
+
+Using this typing for the body of \(f\), a typing for the whole program
+can be concluded with the type of \(f\) taken into account.
+
 \begin{mathpar}
   d_b = o.length = l;\, \ifStmt{l > \num{5}}{o.long=\true}{\num{0}}
   \\
@@ -219,6 +236,11 @@ for an object, rather than the usual lower bound interpretation.
   {\types d_0 \rhd \nonety}
 \end{mathpar}
 \\
+
+This is pretty much just sequencing, the only thing to note is that we can
+freely conclude any row type for \(\newExp\), it may not be immediately obvious
+why we have chosen \(A_{obj}\) here.
+
 \begin{mathpar}
   A_f =  ([length:\intty, long:\boolty], \intty) \to \nonety
   \\
@@ -251,6 +273,9 @@ for an object, rather than the usual lower bound interpretation.
   {f:A_f \types \varDecl{obj}{\newExp}{f(obj, \num{4}); obj}}
 \end{mathpar}
 \\\\
+
+Looking at the typing of the function call \(f(obj, l)\) gives us some hints.
+
 \[\infer
   {
     \infer
@@ -269,9 +294,10 @@ for an object, rather than the usual lower bound interpretation.
     {f:A_f, obj:A_{obj} \types f(obj, \num{4}):\nonety}
   }
 {f:A_f, obj:A_{obj} \types f(obj, \num{4}) \rhd \nonety}\]
-\bibliography{refs}{}
-\bibliographystyle{plain}
-
+\\
+The type we obtained for \(f\) (which was forced by the attribute assignments
+made in the body of \(f\)) forces us to use \(A_{obj}\) for \(obj\).
+\\\\
 Consider the following program:
 \begin{mathpar}
   \begin{array}{l}
@@ -295,5 +321,6 @@ give \(o_2\) the type \([foo:\intty, bar:\boolty]\). This isn't ideal, so it
 seems like we want some sort of row polymorphism in our function types, maybe
 we can give \(f\), a type like \(\forall r.[foo:\intty, r] \to \nonety\).
 \\\\
-
+\bibliography{refs}{}
+\bibliographystyle{plain}
 \end{document}
